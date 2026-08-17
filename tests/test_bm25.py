@@ -61,3 +61,17 @@ def test_unknown_term_returns_nothing_rather_than_everything():
 def test_empty_corpus_is_survivable():
     bm25 = BM25([])
     assert bm25.search("anything", k=3) == []
+
+
+def test_corpus_of_only_stopwords_does_not_divide_by_zero():
+    """Every document tokenising to nothing puts avgdl at zero, which is one
+    division away from a crash on the first query."""
+    bm25 = BM25(["", "the and of", "   "])
+    assert bm25.avgdl == 0.0
+    assert bm25.search("the", k=3) == []
+    assert bm25.search("anything", k=3) == []
+
+
+def test_one_empty_document_alongside_real_ones():
+    bm25 = BM25(["", "checkout payment failed"])
+    assert bm25.search("checkout", k=2)[0][0] == 1

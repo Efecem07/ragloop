@@ -166,6 +166,14 @@ than 1st by one.
   do with it is out of scope, and grounding metrics for the generated answer are
   a different harness.
 - **In-memory only.** No persistence, so an index is rebuilt on start.
+- **No retry around the embeddings call.** A rate limit or a network blip
+  propagates to the caller. That belongs in the client, and
+  [agentloop](https://github.com/Efecem07/agentloop) already implements the
+  provider chain and backoff it would use; wiring the two together is a
+  deliberate not-yet rather than an oversight.
+- **Re-indexing is quadratic.** Each `add()` rebuilds BM25 over the whole corpus
+  because IDF depends on it. Fine for a batch build, wrong for streaming
+  ingestion, which would need incremental posting-list updates.
 - **German and English tokenisation.** The stopword list is small and bilingual;
   there is no stemming, deliberately, because stemming helps prose recall and
   hurts identifier matching.

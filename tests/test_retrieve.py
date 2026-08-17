@@ -122,6 +122,34 @@ def test_build_context_keeps_at_least_one_chunk_even_if_oversized():
     assert "big.md" in ctx
 
 
+def test_store_rejects_a_non_positive_k():
+    """sorted(...)[:k] with a negative k slices from the end and returns the
+    worst matches, still shaped like results."""
+    import pytest
+
+    from ragloop import InMemoryStore
+
+    store = InMemoryStore()
+    store.add([LEXICAL_ONLY], [[1.0, 0.0]])
+    with pytest.raises(ValueError):
+        store.search([1.0, 0.0], k=0)
+    with pytest.raises(ValueError):
+        store.search([1.0, 0.0], k=-1)
+
+
+def test_store_refuses_mixed_embedding_dimensions():
+    """Two embedding models in one index produce vectors that are not
+    comparable; cosine still returns a number, which is the dangerous part."""
+    import pytest
+
+    from ragloop import InMemoryStore
+
+    store = InMemoryStore()
+    store.add([LEXICAL_ONLY], [[1.0, 0.0]])
+    with pytest.raises(ValueError, match="dimension"):
+        store.add([PARAPHRASE], [[1.0, 0.0, 0.0]])
+
+
 def test_context_carries_citable_ids():
     index = HybridIndex(embedder=None)
     index.add([LEXICAL_ONLY])

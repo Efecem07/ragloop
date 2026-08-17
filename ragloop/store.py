@@ -70,6 +70,11 @@ class InMemoryStore:
         self._vectors.extend(vectors)
 
     def search(self, vector: Vector, k: int) -> list[tuple[int, float]]:
+        # A negative k would slice from the end and quietly return the *worst*
+        # matches, which is the kind of bug that survives review because the
+        # output still looks like results.
+        if k <= 0:
+            raise ValueError(f"k must be positive, got {k}")
         scored = ((i, cosine(vector, v)) for i, v in enumerate(self._vectors))
         return sorted(scored, key=lambda kv: -kv[1])[:k]
 
