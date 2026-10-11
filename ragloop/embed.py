@@ -54,12 +54,28 @@ def openai_embedder(
         for i in range(0, len(texts), batch_size):
             batch = list(texts[i : i + batch_size])
             resp = client.embeddings.create(model=model_id, input=batch)
-            # The API is documented to preserve order; sorting by index makes that
-            # explicit rather than assumed, and costs nothing.
-            out.extend(d.embedding for d in sorted(resp.data, key=lambda d: d.index))
+            out.extend(ordered_embeddings(resp.data, len(batch)))
         return out
 
     return embed
+
+
+def ordered_embeddings(data: Sequence, expected: int) -> list[Vector]:
+    """Vectors in input order, from an embeddings response.
+
+    OpenAI documents the order as preserved and also numbers each item with
+    `index`; sorting by it makes the order explicit. Not every "OpenAI-compatible"
+    endpoint fills `index` in, though: Gemini's leaves it None, and sorting on None
+    raised TypeError on the first real batch. When any index is missing the
+    response order is the only order there is, so it is used as is. A count
+    mismatch is an error either way, because zipping a short list onto the chunks
+    would attach vectors to the wrong text without a sound.
+    """
+    if len(data) != expected:
+        raise ValueError(f"embeddings endpoint returned {len(data)} vectors for {expected} inputs")
+    if all(getattr(d, "index", None) is not None for d in data):
+        data = sorted(data, key=lambda d: d.index)
+    return [d.embedding for d in data]
 
 
 def hashing_embedder(dim: int = 256) -> Embedder:

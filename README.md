@@ -149,7 +149,7 @@ with no latency to show for it. `VectorStore` is four methods wide, so a managed
 database drops in as an adapter.
 
 **The embedder is injectable.** Any `(list[str]) -> list[list[float]]` callable.
-That is why the 47 tests run with no network and no API key, which is the
+That is why the 50 tests run with no network and no API key, which is the
 difference between tests that get run and tests that get skipped.
 
 **Fusion depth is separate from k.** Each retriever is asked for 30 candidates
