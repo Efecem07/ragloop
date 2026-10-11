@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ragloop"
-version = "0.1.0"
+version = "0.2.0"
 description = "Hybrid retrieval (BM25 + dense, fused by reciprocal rank) with a retrieval evaluation harness. No dependencies beyond an embeddings client."
 readme = "README.md"
 license = { text = "MIT" }

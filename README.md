@@ -39,6 +39,44 @@ with BM25 and is not a semantic model. Set `RAGLOOP_BASE_URL` and
 `RAGLOOP_API_KEY` (or `OPENAI_API_KEY`) and the dense and hybrid rows become
 meaningful. The harness is the point; the corpus here is a fixture.
 
+## On a public benchmark: BEIR SciFact
+
+The same `ablation()` on [SciFact](https://allenai.org/data/scifact) from the
+[BEIR](https://github.com/beir-cellar/beir) suite: 5,183 scientific abstracts and
+the 300 test claims, each labelled with the abstracts that support or refute it.
+One abstract is one chunk, so the labels apply as published.
+
+| retriever | recall@10 | MRR | nDCG@10 | queries with no hit |
+|---|---|---|---|---|
+| lexical (BM25) | 0.781 | 0.638 | 0.667 | 59 |
+| dense (`nvidia/nemotron-3-embed-1b`) | **0.872** | **0.728** | **0.757** | 36 |
+| hybrid (RRF, k=60) | 0.865 | 0.690 | 0.727 | 36 |
+
+**The BM25 row checks the harness.** BEIR reports nDCG@10 = 0.665 for BM25 on
+SciFact; this implementation gets 0.667 with no tuning. Tokeniser, IDF and the
+metric agree with the reference, so the other two rows can be trusted.
+
+**On this corpus, hybrid does not pay for itself.** Equal-weight fusion with a
+strong embedding model costs 3 points of nDCG against dense alone. SciFact claims
+are paraphrases of the abstracts written by annotators, which is the case dense
+retrieval is good at and the case BM25 is bad at, so adding BM25 mostly promotes
+abstracts that share words with the claim but do not answer it. The fixture in
+`examples/` points the other way because its queries contain literals.
+
+That is the reason this library exists. "Hybrid is better" is a default, not a
+fact about your data; the ablation is what tells you which of the two you have.
+
+```
+python -m benchmarks.scifact                         # BM25 only, no key
+RAGLOOP_API_KEY=... RAGLOOP_BASE_URL=https://integrate.api.nvidia.com/v1 \
+RAGLOOP_EMBED_MODEL=nvidia/nemotron-3-embed-1b RAGLOOP_INPUT_TYPE=1 \
+python -m benchmarks.scifact --markdown
+```
+
+Vectors are cached on disk, so a rerun is free and gives the same numbers.
+`RAGLOOP_INPUT_TYPE=1` sends `passage` while indexing and `query` while
+searching, which asymmetric retrieval models need to be compared fairly.
+
 ## Why hybrid
 
 The two retrievers fail in opposite directions, which is the entire argument for
