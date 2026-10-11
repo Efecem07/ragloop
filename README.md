@@ -1,5 +1,7 @@
 # ragloop
 
+[![tests](https://github.com/Efecem07/ragloop/actions/workflows/tests.yml/badge.svg)](https://github.com/Efecem07/ragloop/actions/workflows/tests.yml) ![python](https://img.shields.io/badge/python-3.10%E2%80%933.13-blue) ![dependencies](https://img.shields.io/badge/dependencies-0-brightgreen) ![license](https://img.shields.io/badge/license-MIT-green)
+
 Hybrid retrieval with the measurement attached. BM25 and dense vectors fused by
 reciprocal rank, plus the evaluation harness that tells you whether any of it
 helped. No dependencies: the whole index is a few hundred lines of readable
